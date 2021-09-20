@@ -45,3 +45,151 @@ $ yarn start
 ```
 # Docker_movies-app-Practice
 # Docker_movies-app-Practice
+
+
+## Steps to dockerize 
+
+### Step 1 : Create the docker files for client and server
+
+1. Go to client directory root and create
+
+```
+touch Dockerfile.client
+
+```
+
+2. Add the following content to the client dockerfile
+
+```
+FROM node:14
+
+WORKDIR /client
+
+ENV PATH /client/node_modules/.bin:$PATH
+
+COPY package*.json ./
+
+COPY yarn.lock ./
+
+RUN yarn
+
+COPY . ./
+
+CMD ["yarn", "start"]
+```
+
+3. Create a .dockerignore file
+
+```
+touch .dockerignore
+```
+
+4. Add the following content to the .dockerignore file
+
+```
+node_modules
+npm-debug.log
+build
+.dockerignore
+**/.git
+**/.DS_Store
+**/node_modules
+```
+
+5. Go to server directory root and create a docker 
+
+```
+touch Dockerfile.server
+
+```
+6. Add the following content to the server dockerfile
+
+```
+FROM node:14
+
+WORKDIR /server
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+CMD [ "node", "index.js" ]
+```
+
+7. Create a .dockerignore file
+
+```
+touch .dockerignore
+```
+
+8. Add the following content to the .dockerignore file
+
+```
+node_modules
+npm-debug.log
+build
+.dockerignore
+**/.git
+**/.DS_Store
+**/node_modules
+```
+### Step 2 : Create docker-compose file 
+
+1. Go to the project root ,create docker-compose file along with the server and client folder
+
+```
+touch docker-compose.yml
+```
+
+2. Add the following content to the docker-compose.yml file
+
+```
+version: "3.9" 
+services:
+  mongodb:
+    network_mode: host
+    image: mongo
+    container_name: mongodb
+    volumes:
+      - mongodb-data:/data/db
+  server:
+    network_mode: host
+    build:
+      context: ./server
+      dockerfile: Dockerfile.server
+    container_name: movie-server
+    depends_on:
+      - mongodb
+  client:
+    network_mode: host
+    build:
+      context: ./client
+      dockerfile: Dockerfile.client
+    container_name: movie-client
+    depends_on:
+      - server
+volumes:
+  mongodb-data: {}
+```
+
+### Step 3 : Bringing up/down the containers
+
+1. Bringing up containers
+
+```
+docker-compose up -d
+```
+
+2. Bringing down the containers
+
+```
+docker-compose down
+```
+
+3. Bringing down the containers along with the created images
+
+```
+docker-compose down --rmi all
+```
